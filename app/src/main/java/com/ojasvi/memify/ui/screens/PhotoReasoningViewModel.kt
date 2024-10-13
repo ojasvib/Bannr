@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 
 class PhotoReasoningViewModel(
@@ -37,54 +38,66 @@ class PhotoReasoningViewModel(
         generationConfig = config
     )
 
-    fun resetToInitialUiState(){
+    fun resetToInitialUiState() {
         _uiState.value = PhotoReasoningUiState.Initial
     }
 
+    fun setLoadingUiState() {
+        _uiState.value = PhotoReasoningUiState.Loading
+    }
+
+    fun setLoadedUiState(outputText: String) {
+        _uiState.value = PhotoReasoningUiState.Success(outputText)
+    }
+
     fun reason(
-        userInput: String,
-        selectedImage: Uri?
+        selectedImages: List<Uri>
     ) {
 
         _uiState.value = PhotoReasoningUiState.Loading
-        val prompt =
-            "Generate a meme caption that fits this photo. The response should contain only the caption without any quotes. Consider additional user input: $userInput"
+        val prompt ="Meticulously tell what products are present in these images, mention brand if present. Answer must only just give" +
+                " info of products separated by commas. "
+//                + "The first character should be the no. of images, then the remaining response"
 
         viewModelScope.launch(Dispatchers.IO) {
 
             val imageRequestBuilder = ImageRequest.Builder(app)
             val imageLoader = ImageLoader.Builder(app).build()
 
-            val bitmap = try {
-                val imageReq = imageRequestBuilder.data(selectedImage)
-                    .size(768)
+            val bitmaps = selectedImages.mapNotNull {
+                val imageRequest = imageRequestBuilder
+                    .data(it)
+                    // Scale the image down to 768px for faster uploads
+                    .size(size = 768)
                     .precision(Precision.EXACT)
                     .build()
-
-                val result = imageLoader.execute(imageReq)
-                if (result is SuccessResult) {
-                    (result.drawable as BitmapDrawable).bitmap
-                } else {
-                    null
+                try {
+                    val result = imageLoader.execute(imageRequest)
+                    if (result is SuccessResult) {
+                        return@mapNotNull (result.drawable as BitmapDrawable).bitmap
+                    } else {
+                        return@mapNotNull null
+                    }
+                } catch (e: Exception) {
+                    return@mapNotNull null
                 }
-            } catch (e: Exception) {
-                null
             }
-            if (bitmap == null) return@launch
 
             try {
                 val inputContent = content {
-                    image(bitmap)
+                    for (bitmap in bitmaps) {
+                        image(bitmap)
+                    }
                     text(prompt)
                 }
 
-                var outputContent = ""
 
-                generativeModel.generateContentStream(inputContent)
-                    .collect { response ->
-                        outputContent += response.text
-                        _uiState.value = PhotoReasoningUiState.Success(outputContent)
-                    }
+                val outputContent = generativeModel.generateContentStream(inputContent)
+                    .toList() // Collects all responses
+                    .joinToString("") { it.text.toString() } // Joins responses into a single string
+
+                // Update the UI state with the final output
+                _uiState.value = PhotoReasoningUiState.Success(outputContent)
             } catch (e: Exception) {
                 _uiState.value = PhotoReasoningUiState.Error(e.localizedMessage ?: "")
             }
