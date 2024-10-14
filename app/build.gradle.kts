@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.ojasvi.memify"
+    namespace = "com.ojasvi.bannr"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.ojasvi.memify"
+        applicationId = "com.ojasvi.bannr"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

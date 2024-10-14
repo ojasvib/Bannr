@@ -1,8 +1,7 @@
-package com.ojasvi.memify.ui.screens
+package com.ojasvi.bannr.ui.screens
 
 import ImageRequest
 import ImageResponse
-import RetrofitInstance
 import android.app.Application
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -15,7 +14,8 @@ import coil.size.Precision
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
-import com.ojasvi.memify.BuildConfig.API_KEY
+import com.ojasvi.bannr.BuildConfig.API_KEY
+import com.ojasvi.bannr.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

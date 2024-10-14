@@ -1,4 +1,4 @@
-package com.ojasvi.memify.ui.theme
+package com.ojasvi.bannr.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

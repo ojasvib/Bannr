@@ -1,4 +1,4 @@
-package com.ojasvi.memify.ui.screens
+package com.ojasvi.bannr.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Card
@@ -22,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,22 +37,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
-import com.ojasvi.memify.R
+import com.ojasvi.bannr.R
 
 @Composable
 fun PhotoReasoningScreen(
     modifier: Modifier = Modifier.navigationBarsPadding(),
     viewModel: PhotoReasoningViewModel = viewModel()
 ) {
+    var productImagesUri by rememberSaveable { mutableStateOf<List<Uri>>(listOf()) }
 
     val photoReasoningUiState by viewModel.uiState.collectAsState()
 
     PhotoReasoningContents(
         uiState = photoReasoningUiState,
-        onImageAdded = viewModel::reasonWithGemini,
-        onUpdateImage = viewModel::resetToInitialUiState,
-        onGeminiResponseReceived = viewModel::generatePromoBanner
+        onImageAdded = { selectedImageUris ->
+            viewModel.resetToInitialUiState()
+            productImagesUri = selectedImageUris
+        },
+        onSendClicked = { viewModel.reasonWithGemini(productImagesUri) },
+        onGeminiResponseReceived = viewModel::generatePromoBanner,
+        productImagesUri = productImagesUri
     )
 }
 
@@ -57,10 +66,10 @@ fun PhotoReasoningScreen(
 fun PhotoReasoningContents(
     uiState: PhotoReasoningUiState = PhotoReasoningUiState.Loading,
     onImageAdded: (List<Uri>) -> Unit,
-    onUpdateImage: () -> Unit,
-    onGeminiResponseReceived: (String) -> Unit
+    onGeminiResponseReceived: (String) -> Unit,
+    onSendClicked: () -> Unit,
+    productImagesUri: List<Uri>
 ) {
-    var productImagesUri by rememberSaveable { mutableStateOf<List<Uri>>(listOf()) }
 
     var userPrompt by rememberSaveable { mutableStateOf("") }
 
@@ -68,9 +77,6 @@ fun PhotoReasoningContents(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        fun resetState() {
-            onUpdateImage()
-        }
 
         Box(
             modifier = Modifier
@@ -87,12 +93,11 @@ fun PhotoReasoningContents(
         InputField(
             prompt = userPrompt,
             onPromptChanged = { userPrompt = it },
-            onSendClicked = { },
             onImagesSelected = { selectedImageUris ->
-                resetState()
-                productImagesUri = selectedImageUris
-                onImageAdded(productImagesUri)
-            }
+                onImageAdded(selectedImageUris)
+            },
+            onSendClicked = { onSendClicked() },
+            productImagesUri = productImagesUri
         )
     }
 }
@@ -123,7 +128,13 @@ private fun Banner(
             }
 
             is PhotoReasoningUiState.ImagenSuccess -> {
-                BannerImage(uiState.bannerLink)
+                Image(
+                    painter = rememberImagePainter(uiState.bannerLink),
+                    contentDescription = "Generated Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center)
+                )
             }
 
             is PhotoReasoningUiState.Error -> {
@@ -152,7 +163,8 @@ private fun InputField(
     prompt: String,
     onPromptChanged: (String) -> Unit,
     onSendClicked: () -> Unit,
-    onImagesSelected: (List<Uri>) -> Unit, // Updated to handle multiple images
+    onImagesSelected: (List<Uri>) -> Unit,
+    productImagesUri: List<Uri>// Updated to handle multiple images
 ) {
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.GetMultipleContents()
@@ -164,59 +176,59 @@ private fun InputField(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .padding(vertical = 14.dp)
-                .navigationBarsPadding()
-        ) {
-            IconButton(
-                onClick = {
-                    pickMedia.launch(
-                        "image/*"
-                    )
-                },
-                modifier = Modifier
-                    .padding(all = 4.dp)
-                    .align(Alignment.CenterVertically)
+        Column {
+            LazyRow(
+                modifier = Modifier.padding(all = 8.dp)
             ) {
-                Icon(
-                    Icons.Rounded.Add,
-                    contentDescription = stringResource(R.string.add_image),
-                )
+                items(productImagesUri) { imageUri ->
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .requiredSize(72.dp)
+                    )
+                }
             }
-            OutlinedTextField(
-                value = prompt,
-                label = { Text(stringResource(R.string.reason_label)) },
-                placeholder = { Text(stringResource(R.string.reason_hint)) },
-                onValueChange = { onPromptChanged(it) },
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
-            )
+                    .navigationBarsPadding()
+            ) {
+                IconButton(
+                    onClick = {
+                        pickMedia.launch(
+                            "image/*"
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(all = 4.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        Icons.Rounded.Add,
+                        contentDescription = stringResource(R.string.add_image),
+                    )
+                }
+                OutlinedTextField(
+                    value = prompt,
+                    label = { Text(stringResource(R.string.reason_label)) },
+                    placeholder = { Text(stringResource(R.string.reason_hint)) },
+                    onValueChange = { onPromptChanged(it) },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                )
+                TextButton(
+                    onClick = { onSendClicked() },
+                    modifier = Modifier
+                        .padding(all = 4.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Text(stringResource(R.string.action_go))
+                }
+            }
+
         }
     }
 }
 
 
-
-@Composable
-fun ShowGeneratedImage(imageUrl: String?) {
-    if (imageUrl != null) {
-        Image(
-            painter = rememberImagePainter(imageUrl),
-            contentDescription = "Generated Image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp) // Set the height according to your design
-                .padding(8.dp)
-        )
-    } else {
-        Text("No image available")
-    }
-}
-
-@Composable
-private fun BannerImage(bannerUri: String) {
-    Box {
-        ShowGeneratedImage(bannerUri)
-    }
-}
