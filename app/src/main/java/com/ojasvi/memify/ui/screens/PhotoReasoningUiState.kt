@@ -19,8 +19,12 @@ sealed interface PhotoReasoningUiState {
     /**
      * Text has been generated
      */
-    data class Success(
-        val outputText: String
+    data class GeminiSuccess(
+        val geminiTextResponse: String
+    ): PhotoReasoningUiState
+
+    data class ImagenSuccess(
+        val bannerLink: String
     ): PhotoReasoningUiState
 
     /**
