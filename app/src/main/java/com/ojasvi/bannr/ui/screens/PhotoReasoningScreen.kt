@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -166,6 +167,7 @@ private fun InputField(
     onImagesSelected: (List<Uri>) -> Unit,
     productImagesUri: List<Uri>// Updated to handle multiple images
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { selectedImageUri ->
@@ -218,7 +220,10 @@ private fun InputField(
                         .fillMaxWidth(0.8f)
                 )
                 TextButton(
-                    onClick = { onSendClicked() },
+                    onClick = {
+                        keyboardController?.hide()
+                        onSendClicked()
+                    },
                     modifier = Modifier
                         .padding(all = 4.dp)
                         .align(Alignment.CenterVertically)
