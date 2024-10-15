@@ -1,8 +1,11 @@
+package com.ojasvi.bannr.network
+
+import ImageGenerationService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
-    private const val BASE_URL = "API_BASE_URL" // Replace with your API base URL
+    private const val BASE_URL = "https://credible-blowfish-tender.ngrok-free.app"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()

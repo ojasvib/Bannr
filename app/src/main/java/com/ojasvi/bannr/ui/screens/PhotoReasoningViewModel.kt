@@ -1,12 +1,12 @@
-package com.ojasvi.memify.ui.screens
+package com.ojasvi.bannr.ui.screens
 
 import ImageRequest
 import ImageResponse
-import RetrofitInstance
 import android.app.Application
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -15,7 +15,8 @@ import coil.size.Precision
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
-import com.ojasvi.memify.BuildConfig.API_KEY
+import com.ojasvi.bannr.BuildConfig.API_KEY
+import com.ojasvi.bannr.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,8 @@ class PhotoReasoningViewModel(
     val uiState: StateFlow<PhotoReasoningUiState> =
         _uiState.asStateFlow()
 
+    val productImagesUri = mutableStateListOf<Uri>()
+
     private val config = generationConfig {
         temperature = 0.7f
     }
@@ -46,6 +49,10 @@ class PhotoReasoningViewModel(
 
     fun resetToInitialUiState() {
         _uiState.value = PhotoReasoningUiState.Initial
+    }
+
+    fun setAddedImagesUri(imagesUri:List<Uri>){
+        productImagesUri.addAll(imagesUri)
     }
 
     fun generatePromoBanner(userPrompt: String) {

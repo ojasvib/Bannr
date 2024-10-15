@@ -1,4 +1,4 @@
-package com.ojasvi.memify
+package com.ojasvi.bannr
 
 import org.junit.Test
 

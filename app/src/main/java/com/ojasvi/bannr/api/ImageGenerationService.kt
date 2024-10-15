@@ -2,9 +2,9 @@ import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-data class ImageRequest(val prompt: String) // Adjust according to your API requirements
+data class ImageRequest(val prompt: String)
 
-data class ImageResponse(val image_url: String) // Adjust according to your API response
+data class ImageResponse(val image_url: String)
 
 interface ImageGenerationService {
     @POST("/") // Replace with your actual endpoint

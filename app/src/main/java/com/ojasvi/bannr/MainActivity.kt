@@ -1,4 +1,4 @@
-package com.ojasvi.memify
+package com.ojasvi.bannr
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -12,8 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.ojasvi.memify.ui.screens.PhotoReasoningScreen
-import com.ojasvi.memify.ui.theme.MemifyTheme
+import com.ojasvi.bannr.ui.screens.PhotoReasoningScreen
+import com.ojasvi.bannr.ui.theme.MemifyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

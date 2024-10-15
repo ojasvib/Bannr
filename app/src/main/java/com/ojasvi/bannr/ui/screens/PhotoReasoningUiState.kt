@@ -1,5 +1,5 @@
 
-package com.ojasvi.memify.ui.screens
+package com.ojasvi.bannr.ui.screens
 
 /**
  * A sealed hierarchy describing the state of the text generation.
