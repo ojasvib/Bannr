@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -47,7 +47,7 @@ fun PhotoReasoningScreen(
     modifier: Modifier = Modifier.navigationBarsPadding(),
     viewModel: PhotoReasoningViewModel = viewModel()
 ) {
-    var productImagesUri by rememberSaveable { mutableStateOf<List<Uri>>(listOf()) }
+    val productImagesUri = viewModel.productImagesUri
 
     val photoReasoningUiState by viewModel.uiState.collectAsState()
 
@@ -55,7 +55,7 @@ fun PhotoReasoningScreen(
         uiState = photoReasoningUiState,
         onImageAdded = { selectedImageUris ->
             viewModel.resetToInitialUiState()
-            productImagesUri = selectedImageUris
+            viewModel.setAddedImagesUri(selectedImageUris)
         },
         onSendClicked = { viewModel.reasonWithGemini(productImagesUri) },
         onGeminiResponseReceived = viewModel::generatePromoBanner,
@@ -188,7 +188,7 @@ private fun InputField(
                         contentDescription = null,
                         modifier = Modifier
                             .padding(4.dp)
-                            .requiredSize(72.dp)
+                            .size(72.dp)
                     )
                 }
             }

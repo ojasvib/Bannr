@@ -6,6 +6,7 @@ import android.app.Application
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -35,6 +36,8 @@ class PhotoReasoningViewModel(
     val uiState: StateFlow<PhotoReasoningUiState> =
         _uiState.asStateFlow()
 
+    val productImagesUri = mutableStateListOf<Uri>()
+
     private val config = generationConfig {
         temperature = 0.7f
     }
@@ -46,6 +49,10 @@ class PhotoReasoningViewModel(
 
     fun resetToInitialUiState() {
         _uiState.value = PhotoReasoningUiState.Initial
+    }
+
+    fun setAddedImagesUri(imagesUri:List<Uri>){
+        productImagesUri.addAll(imagesUri)
     }
 
     fun generatePromoBanner(userPrompt: String) {
