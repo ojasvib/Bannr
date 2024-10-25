@@ -1,7 +1,5 @@
 package com.ojasvi.bannr.ui.screens
 
-import ImageRequest
-import ImageResponse
 import android.app.Application
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -16,6 +14,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import com.ojasvi.bannr.BuildConfig.API_KEY
+import com.ojasvi.bannr.api.ImageRequest
 import com.ojasvi.bannr.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,9 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class PhotoReasoningViewModel(
     private val app: Application
@@ -144,23 +140,17 @@ class PhotoReasoningViewModel(
     }
 
     private fun generateImage(prompt: String, onImageUrlGenerated: (String?) -> Unit) {
-        val request = ImageRequest(prompt)
-        RetrofitInstance.api.generateImage(request).enqueue(object : Callback<ImageResponse> {
-            override fun onResponse(call: Call<ImageResponse>, response: Response<ImageResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val imageUrl = response.body()!!.image_url
-                    Log.d("ImageGeneration", "Image URL: $imageUrl")
-                    onImageUrlGenerated(imageUrl) // Pass the image URL to the callback
-                } else {
-                    Log.e("ImageGeneration", "Error: ${response.code()}")
-                    onImageUrlGenerated(null) // Pass null if there's an error
-                }
+        viewModelScope.launch {
+            try {
+                val request = ImageRequest(prompt)
+                val response = RetrofitInstance.api.generateImage(request)
+                val imageUrl = response.imageUrl
+                Log.d("ImageGeneration", "Image URL: $imageUrl")
+                onImageUrlGenerated(imageUrl)
+            } catch (e: Exception) {
+                Log.e("ImageGeneration", "Error: ${e.message}")
+                onImageUrlGenerated(null)
             }
-
-            override fun onFailure(call: Call<ImageResponse>, t: Throwable) {
-                Log.e("ImageGeneration", "Failure: ${t.message}")
-                onImageUrlGenerated(null) // Pass null on failure
-            }
-        })
+        }
     }
 }
